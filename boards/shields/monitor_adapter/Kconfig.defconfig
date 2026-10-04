@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MIT
+
+if SHIELD_MONITOR_ADAPTER
+
+config ZMK_KEYBOARD_NAME
+    default "Charybdis Monitor"
+
+config ZMK_DONGLE_MONITOR
+    default y
+
+config ZMK_DISPLAY
+    default y
+
+endif

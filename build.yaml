@@ -13,11 +13,25 @@
 #
 ---
 include:
-  - board: nice_nano_v2
+  # Charybdis 键盘左半（peripheral）
+  - board: nice_nano//zmk
     shield: charybdis_left
-  - board: nice_nano_v2
+    artifact-name: charybdis_left
+  # Charybdis 键盘右半（central，带轨迹球/旋钮）+ DYA Studio
+  - board: nice_nano//zmk
     shield: charybdis_right
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
-  - board: nice_nano_v2
+    artifact-name: charybdis_right
+  # 独立 OLED 状态监视器（监听键盘 BLE 广播）
+  - board: nice_nano//zmk
+    shield: monitor_adapter dongle_display
+    artifact-name: charybdis_monitor_display
+  # 键盘设置复位
+  - board: nice_nano//zmk
     shield: settings_reset
+    artifact-name: charybdis_settings_reset
+  # 监视器设置复位
+  - board: nice_nano//zmk
+    shield: settings_reset
+    artifact-name: charybdis_monitor_settings_reset

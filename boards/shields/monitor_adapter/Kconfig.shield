@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT
+
+config SHIELD_MONITOR_ADAPTER
+    def_bool $(shields_list_contains,monitor_adapter)
