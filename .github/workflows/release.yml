@@ -1,0 +1,92 @@
+name: Publish Charybdis firmware release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release 标签/版本号，例如 v1.0.0"
+        required: true
+        type: string
+      release_name:
+        description: "Release 显示名称（可选）"
+        required: false
+        default: "Charybdis DYA + Monitor firmware"
+        type: string
+      prerelease:
+        description: "标记为预发布（测试版勾选）"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find latest successful build on current branch
+        id: latest_build
+        run: |
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${{ github.ref_name }}&status=success&per_page=1" --jq '.workflow_runs[0].id')
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+            echo "::error::No successful build found on ${{ github.ref_name }}. Run the Build workflow first."
+            exit 1
+          fi
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Using latest successful build run: $RUN_ID"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.latest_build.outputs.run_id }}
+
+      - name: Prepare complete firmware archive
+        run: |
+          find release -type f -name "*.uf2" -print
+          cd release
+          zip -9 ../charybdis-${{ github.event.inputs.version }}.zip ./*.uf2
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.release_name }}
+          target_commitish: ${{ github.ref_name }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          generate_release_notes: false
+          body: |
+            ## Charybdis DYA + Monitor 固件发布
+
+            基于 ZMK `main+dya` / Zephyr 4.1 与 DYA Studio 的 Charybdis 分体键盘 + OLED 状态监视器固件。
+
+            ## 功能特性
+
+            - DYA Studio 在线改键、Runtime Macro / Combo、BLE 管理、Settings RPC、Device Info、按键统计
+            - 独立 OLED 状态监视器（Monitor）：左右手电量横条 + 中央层名 / 修饰键 + WPM + 连接状态
+            - 键盘 BLE 广播（Prospector 协议），监视器 30 秒无变化自动熄屏、有变化自动亮屏
+            - 保留 Charybdis 原有布局 / 键位 / 旋钮 / RGB / 轨迹球
+
+            ## 固件说明
+
+            - `charybdis_left.uf2`：键盘左半（peripheral）
+            - `charybdis_right.uf2`：键盘右半（central，带轨迹球）
+            - `charybdis_monitor_display.uf2`：独立 OLED 状态监视器（nice!nano）
+            - `charybdis_settings_reset.uf2`：清除键盘配对与设置
+            - `charybdis_monitor_settings_reset.uf2`：清除监视器设置
+            - `charybdis-${{ github.event.inputs.version }}.zip`：完整固件包
+
+            ## 升级提示
+
+            升级前建议先刷 `settings_reset` 再重新配对；键盘左右半与监视器请使用同一次构建的固件，不要混用不同构建批次。
+          files: |
+            release/*.uf2
+            charybdis-${{ github.event.inputs.version }}.zip
+          fail_on_unmatched_files: true

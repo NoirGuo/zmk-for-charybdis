@@ -1,5 +1,33 @@
-on: [push, pull_request, workflow_dispatch]
+name: Build ZMK firmware
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - "keymap-drawer/**"
+
+permissions:
+  actions: read
+  contents: write
 
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    # DYA Studio 版本：使用 cormoran 的 ZMK fork 提供的构建 action
+    # （对应 ZMK `main+dya`，含 DYA Studio / 蓝牙广播 / 监视器所需能力）
+    uses: cormoran/zmk/.github/workflows/build-user-config.yml@v0.3-branch+dya
+
+  # keymap-drawer：从 config/charybdis.keymap 生成 SVG / YAML 键位图
+  # 绘制全部层（0-10）；charybdis 的 2-10 层为 &trans 占位，会以空白层形式呈现
+  draw:
+    uses: caksoylar/keymap-drawer/.github/workflows/draw-zmk.yml@main
+    permissions:
+      contents: write  # allow workflow to commit to the repo
+    with:
+      keymap_patterns: "config/*.keymap"        # path to the keymaps to parse
+      config_path: "keymap_drawer.config.yaml"  # config file, ignored if not exists
+      output_folder: "keymap-drawer"            # path to save produced SVG and keymap YAML files
+      parse_args: "charybdis:''"                # no layer filter: draw ALL layers
+      draw_args: "charybdis:'-k default_transform'"  # layout from config/charybdis.json
+      commit_message: "[Draw] ${{ github.event.head_commit.message }}"
+      amend_commit: false
+      json_path: "config"
+      destination: "both"
