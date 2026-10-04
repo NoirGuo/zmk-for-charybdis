@@ -5,6 +5,12 @@
  */
  
 #include "charybdis.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+// 注意：这里不要 include <input/processors.dtsi>。
+// keymap（EXTRA_DTC_OVERLAY_FILE）已 include 它，二者在同一预处理单元，
+// 重复 include（无 include guard）会导致 zip_* 节点重复定义。
+// zip_xy_swap_mapper / zip_xy_to_scroll_mapper / zip_scroll_scaler
+// 标签由 keymap 顶部的 #include <input/processors.dtsi> 提供。
 
 &default_transform {
     col-offset = <6>;
@@ -54,10 +60,18 @@
         compatible = "pixart,pmw3610";
         reg = <0>;
         spi-max-frequency = <2000000>;
-        irq-gpios = <&gpio0 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-        scroll-layers = <1>;
-        //snipe-layers = <2>;
-      // automouse-layer = <3>;
+        motion-gpios = <&gpio0 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        zephyr,axis-x = <INPUT_REL_X>;
+        zephyr,axis-y = <INPUT_REL_Y>;
+        // 与原 PMW3610_CPI=400 等价
+        res-cpi = <400>;
+        // 与原 CONFIG_PMW3610_SMART_ALGORITHM=y 等价
+        smart-mode;
+        // 传感器 90° 安装 + X 反转（原 ORIENTATION_90 + INVERT_X）：
+        // 驱动输出 x'=-raw_x、y'=-raw_y，再经 listener 的 X↔Y swap 得到
+        // x=-raw_y、y=-raw_x，与原驱动方向处理完全一致
+        invert-x;
+        invert-y;
     };
 };
 
@@ -109,6 +123,15 @@
     trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
+        // 全局（非滚动层）：X↔Y 交换，与驱动 invert-x/invert-y 配合，
+        // 复现原 ORIENTATION_90 + INVERT_X 的方向语义
+        input-processors = <&zip_xy_swap_mapper>;
+        // 层 1 = 滚动层（原 scroll-layers = <1>）：
+        // 交换方向 → X/Y 移动转滚轮 → 滚轮缩放（原 keymap 注释的 2 1 参数）
+        child-binding {
+            layers = <1>;
+            input-processors = <&zip_xy_swap_mapper &zip_xy_to_scroll_mapper &zip_scroll_scaler 2 1>;
+        };
     };
 };
 
