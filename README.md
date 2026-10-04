@@ -213,4 +213,14 @@ timeout（默认约 4 秒）才感知断开并重新扫描；而左半重新上�
 
 ## 键位图
 
-自动生成的键位图见仓库 `keymap-drawer/` 目录（`charybdis.svg` / `charybdis.yaml`）。
+<img src="keymap-drawer/charybdis.svg" >
+
+## 参考项目
+
+- [zmk-sofle-dongle-dya (monitor)](https://github.com/S7venYoung/zmk-sofle-dongle-dya)
+- [Noirix44 (monitor)](https://github.com/NoirGuo/zmk-config-Noirix44/tree/monitor)
+- [DYA Studio Developer Guide](https://studio.dya.cormoran.works/developer-guide)
+- [cormoran/zmk-feature-runtime-macro](https://github.com/cormoran/zmk-feature-runtime-macro)
+- [cormoran/zmk-feature-custom-settings](https://github.com/cormoran/zmk-feature-custom-settings)
+- [englmaxi/zmk-dongle-display](https://github.com/englmaxi/zmk-dongle-display)
+- [janpfischer/zmk-dongle-screen](https://github.com/janpfischer/zmk-dongle-screen)
