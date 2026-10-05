@@ -19,7 +19,3 @@ include:
   - board: nice_nano//zmk
     shield: settings_reset
     artifact-name: charybdis_settings_reset
-  # Dongle 设置复位
-  - board: nice_nano//zmk
-    shield: settings_reset
-    artifact-name: charybdis_dongle_settings_reset

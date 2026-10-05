@@ -129,7 +129,7 @@
      * 依赖 keymap 顶部 #include <input/processors.dtsi> 提供的 zip_* 标签。 */
     input_split: input_split {
         compatible = "zmk,input-split";
-        reg = <0>;
+        reg = <0 0>;
         device = <&trackball>;
     };
 };

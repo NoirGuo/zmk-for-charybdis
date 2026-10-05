@@ -78,11 +78,11 @@ GitHub Actions 构建完成后，在运行记录的 Artifacts 中下载固件压
 | `charybdis_dongle_display.uf2` | 独立接收器（Dongle） |
 | `charybdis_left.uf2` | 键盘左手 |
 | `charybdis_right.uf2` | 键盘右手 |
-| `charybdis_settings_reset.uf2` | 清除键盘配对与设置 |
-| `charybdis_dongle_settings_reset.uf2` | 清除 Dongle 配对与设置 |
+| `charybdis_settings_reset.uf2` | 清除配对与设置（左右手/Dongle 通用，nice_nano v2） |
 
 升级/首次使用建议接收器、左手、右手使用**同一次 Actions 构建**的固件，不要混用不同分支或构建批次。
-如连接异常，可先刷 `settings_reset` 清空配对，再重新刷入三份固件并重新配对。
+如连接异常，可先刷 `settings_reset` 清空配对，再重新刷入三份固件并重新配对
+（左右手与 Dongle 同为 nice_nano v2，settings_reset 固件通用）。
 
 ## 配对步骤
 
@@ -128,7 +128,7 @@ GitHub Actions 构建完成后，在运行记录的 Artifacts 中下载固件压
 
 ## 刷机与构建
 
-GitHub Actions 的 `build.yml` 会构建全部 5 个固件；`release.yml` 可用于打 tag 发布 Release。
+GitHub Actions 的 `build.yml` 会构建全部 4 个固件；`release.yml` 可用于打 tag 发布 Release。
 本地构建（ZMK 标准流程）：
 
 ```bash

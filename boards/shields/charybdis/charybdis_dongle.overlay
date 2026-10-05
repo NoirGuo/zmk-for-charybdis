@@ -28,7 +28,7 @@
      * #include <input/processors.dtsi> 提供。 */
     input_split_0: input_split_0 {
         compatible = "zmk,input-split";
-        reg = <0>;
+        reg = <0 0>;
     };
 
     /* 与 charybdis_right 原 input-listener 相同的处理链（方向交换 + 层1滚动） */
