@@ -406,23 +406,15 @@ static const struct display_driver_api gc9a01_api = {
 		.mdac = DT_INST_PROP(inst, mdac),                                                   \
 		.colmod = DT_INST_PROP(inst, colmod),                                               \
 		.inversion = DT_INST_PROP(inst, display_inversion),                                 \
-		.pwrctrl1 = {DT_INST_PROP(inst, pwrctrl1)[0]},                                      \
-		.pwrctrl2 = {DT_INST_PROP(inst, pwrctrl2)[0]},                                      \
-		.pwrctrl3 = {DT_INST_PROP(inst, pwrctrl3)[0]},                                      \
-		.pwrctrl4 = {DT_INST_PROP(inst, pwrctrl4)[0]},                                      \
-		.gamma1 = {DT_INST_PROP(inst, gamma1)[0], DT_INST_PROP(inst, gamma1)[1],            \
-			   DT_INST_PROP(inst, gamma1)[2], DT_INST_PROP(inst, gamma1)[3],            \
-			   DT_INST_PROP(inst, gamma1)[4], DT_INST_PROP(inst, gamma1)[5]},           \
-		.gamma2 = {DT_INST_PROP(inst, gamma2)[0], DT_INST_PROP(inst, gamma2)[1],            \
-			   DT_INST_PROP(inst, gamma2)[2], DT_INST_PROP(inst, gamma2)[3],            \
-			   DT_INST_PROP(inst, gamma2)[4], DT_INST_PROP(inst, gamma2)[5]},           \
-		.gamma3 = {DT_INST_PROP(inst, gamma3)[0], DT_INST_PROP(inst, gamma3)[1],            \
-			   DT_INST_PROP(inst, gamma3)[2], DT_INST_PROP(inst, gamma3)[3],            \
-			   DT_INST_PROP(inst, gamma3)[4], DT_INST_PROP(inst, gamma3)[5]},           \
-		.gamma4 = {DT_INST_PROP(inst, gamma4)[0], DT_INST_PROP(inst, gamma4)[1],            \
-			   DT_INST_PROP(inst, gamma4)[2], DT_INST_PROP(inst, gamma4)[3],            \
-			   DT_INST_PROP(inst, gamma4)[4], DT_INST_PROP(inst, gamma4)[5]},           \
-		.framerate = {DT_INST_PROP(inst, framerate)[0]},                                    \
+		.pwrctrl1 = DT_INST_PROP(inst, pwrctrl1),                                      \
+		.pwrctrl2 = DT_INST_PROP(inst, pwrctrl2),                                      \
+		.pwrctrl3 = DT_INST_PROP(inst, pwrctrl3),                                      \
+		.pwrctrl4 = DT_INST_PROP(inst, pwrctrl4),                                      \
+		.gamma1 = DT_INST_PROP(inst, gamma1),                                        \
+		.gamma2 = DT_INST_PROP(inst, gamma2),                                        \
+		.gamma3 = DT_INST_PROP(inst, gamma3),                                        \
+		.gamma4 = DT_INST_PROP(inst, gamma4),                                        \
+		.framerate = DT_INST_PROP(inst, framerate),                                    \
 		.width = DT_INST_PROP(inst, width),                                                 \
 		.height = DT_INST_PROP(inst, height),                                               \
 	};                                                                                          \
