@@ -9,7 +9,7 @@
         zmk,display-led = &pwm_led_0;
     };
 
-    dongle_kscan: kscan {
+    dongle_kscan: dongle_kscan {
         compatible = "zmk,kscan-mock";
         columns = <0>;
         rows = <0>;
@@ -30,7 +30,7 @@
     input_splits {
         #address-cells = <1>;
         #size-cells = <0>;
-        input_split_0: input_split_0 {
+        input_split_0: input_split@0 {
             compatible = "zmk,input-split";
             reg = <0>;
         };
