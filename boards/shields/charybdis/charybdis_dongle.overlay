@@ -25,10 +25,15 @@
 
     /* 接收右半（peripheral reg 0）经 split 转发的轨迹球 input 事件。
      * zip_* 标签由 config/charybdis.keymap 顶部的
-     * #include <input/processors.dtsi> 提供。 */
-    input_split_0: input_split_0 {
-        compatible = "zmk,input-split";
-        reg = <0 0>;
+     * #include <input/processors.dtsi> 提供。
+     * 容器 #size-cells = 0，使 reg 只有 address cell（通道号）。 */
+    input_splits {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        input_split_0: input_split_0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+        };
     };
 
     /* 与 charybdis_right 原 input-listener 相同的处理链（方向交换 + 层1滚动） */

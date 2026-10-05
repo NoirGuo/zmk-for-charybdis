@@ -126,10 +126,15 @@
 / {
     /* 右半（peripheral）：轨迹球原始 input 事件经 split 转发到 dongle（central）。
      * 方向/滚动处理（zip_*）移到 dongle 的 input-listener。
-     * 依赖 keymap 顶部 #include <input/processors.dtsi> 提供的 zip_* 标签。 */
-    input_split: input_split {
-        compatible = "zmk,input-split";
-        reg = <0 0>;
-        device = <&trackball>;
+     * 依赖 keymap 顶部 #include <input/processors.dtsi> 提供的 zip_* 标签。
+     * 容器 #size-cells = 0，使 reg 只有 address cell（通道号）。 */
+    input_splits {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        input_split: input_split {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&trackball>;
+        };
     };
 };
