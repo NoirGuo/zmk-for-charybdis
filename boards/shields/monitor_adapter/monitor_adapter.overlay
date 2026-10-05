@@ -5,7 +5,8 @@
 / {
     chosen {
         zmk,kscan = &monitor_kscan;
-        zephyr,display = &monitor_oled;
+        zephyr,display = &monitor_lcd;
+        zmk,display-led = &pwm_led_0;
     };
 
     monitor_kscan: kscan {
@@ -14,44 +15,132 @@
         rows = <0>;
         events = <0>;
     };
+
+    disp_bl: disp_bl {
+        compatible = "pwm-leds";
+        pwm_led_0: pwm_led_0 {
+            pwms = <&pwm1 0 PWM_USEC(20) PWM_POLARITY_NORMAL>;
+        };
+    };
 };
 
-/* nice_nano I2C0: SDA = P0.17, SCL = P0.20 (same as Sofle monitor receiver).
- * If your OLED is wired to different pins, adjust the psels below.
+/*
+ * GC9A01 240x240 SPI 圆形屏（1.28 英寸，8 针 VCC GND SCL SDA DC CS RST BL）：
+ *   SCK  = P0.17  (SPIM_SCK)
+ *   MOSI = P0.20  (SPIM_MOSI)
+ *   CS   = P1.00  (cs-gpios)
+ *   DC   = P0.24  (cmd-data-gpios)
+ *   RST  = P0.22  (reset-gpios)
+ *   BL   = P0.11  (pwm1 OUT0，背光)
+ *
+ * 圆形屏显示 240x240，正常方向（mdac=0x08，BGR），与 ST7789V 相同的
+ * SPI 直驱方式（自定义 binding "noirix,gc9a01"）。
+ *
+ * 板型说明：Zephyr 4.1 起 build.yaml 中 `nice_nano//zmk` 默认即 v2
+ * （v1 需写 nice_nano@1//zmk），与以上 v2 引脚接线一致。
+ *
+ * 如需换回 ST7789V 240x280 圆角横屏：把下方 monitor_lcd 节点替换为
+ * 注释中保留的 st7789v 节点，并把 CMakeLists.txt 里两个驱动源文件
+ * 同时保留即可（各自注册 compatible，互不冲突）。
  */
 &pinctrl {
-    monitor_i2c0_default: monitor_i2c0_default {
+    monitor_spi0_default: monitor_spi0_default {
         group1 {
-            psels = <NRF_PSEL(TWIM_SDA, 0, 17)>,
-                    <NRF_PSEL(TWIM_SCL, 0, 20)>;
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 20)>;
         };
     };
 
-    monitor_i2c0_sleep: monitor_i2c0_sleep {
+    monitor_spi0_sleep: monitor_spi0_sleep {
         group1 {
-            psels = <NRF_PSEL(TWIM_SDA, 0, 17)>,
-                    <NRF_PSEL(TWIM_SCL, 0, 20)>;
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 20)>;
+            low-power-enable;
+        };
+    };
+
+    monitor_pwm1_default: monitor_pwm1_default {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 11)>;
+        };
+    };
+
+    monitor_pwm1_sleep: monitor_pwm1_sleep {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 11)>;
             low-power-enable;
         };
     };
 };
 
-&i2c0 {
+&spi0 {
     status = "okay";
-    compatible = "nordic,nrf-twi";
-    pinctrl-0 = <&monitor_i2c0_default>;
-    pinctrl-1 = <&monitor_i2c0_sleep>;
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&monitor_spi0_default>;
+    pinctrl-1 = <&monitor_spi0_sleep>;
     pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio1 0 GPIO_ACTIVE_LOW>;
 
-    monitor_oled: sh1106@3c {
-        compatible = "sinowealth,sh1106";
-        reg = <0x3c>;
-        width = <128>;
-        height = <64>;
-        segment-offset = <2>;
-        page-offset = <0>;
-        display-offset = <0>;
-        multiplex-ratio = <63>;
-        prechargep = <0x22>;
+    /* GC9A01 1.28" 240x240 圆形屏（当前使用）。 */
+    monitor_lcd: gc9a01@0 {
+        compatible = "noirix,gc9a01";
+        spi-max-frequency = <20000000>;
+        reg = <0>;
+        cmd-data-gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+        reset-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+        /* 240x240 完整面板，无偏移；mdac=0x08 (BGR) 正常方向。
+         * GC9A01 圆屏出厂默认反相显示，display-inversion 使内容正常。 */
+        width = <240>;
+        height = <240>;
+        x-offset = <0>;
+        y-offset = <0>;
+        mdac = <0x08>;
+        colmod = <0x55>;
+        display-inversion;
+        pwrctrl1 = [00];
+        pwrctrl2 = [13];
+        pwrctrl3 = [13];
+        pwrctrl4 = [22];
+        gamma1 = [45 09 08 08 26 2A];
+        gamma2 = [43 70 72 36 37 6F];
+        gamma3 = [45 09 08 08 26 2A];
+        gamma4 = [43 70 72 36 37 6F];
+        framerate = [34];
     };
+
+    /* ST7789V 240x280 圆角屏（横放 280x240，备用，切换时启用此节点）：
+     * monitor_lcd: st7789v@0 {
+     *     compatible = "noirix,st7789v";
+     *     spi-max-frequency = <20000000>;
+     *     reg = <0>;
+     *     cmd-data-gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+     *     reset-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+     *     width = <280>;
+     *     height = <240>;
+     *     x-offset = <20>;
+     *     y-offset = <0>;
+     *     vcom = <0x19>;
+     *     gctrl = <0x35>;
+     *     vrhs = <0x12>;
+     *     vdvs = <0x20>;
+     *     mdac = <0x60>;
+     *     lcm = <0x2c>;
+     *     colmod = <0x05>;
+     *     gamma = <0x01>;
+     *     porch-param = [08 08 00 22 22];
+     *     cmd2en-param = [5a 69 02 01];
+     *     pwctrl1-param = [a4 a1];
+     *     pvgam-param = [F0 00 0A 10 12 2A 3F 54 4B 1B 0E 0D 1F 23];
+     *     nvgam-param = [F0 00 0A 10 12 2C 3F 44 50 2D 1D 1F 20 23];
+     *     ram-param = [00 F0];
+     *     rgb-param = [CD 08 14];
+     * };
+     */
+};
+
+&pwm1 {
+    status = "okay";
+    pinctrl-0 = <&monitor_pwm1_default>;
+    pinctrl-1 = <&monitor_pwm1_sleep>;
+    pinctrl-names = "default", "sleep";
 };

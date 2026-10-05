@@ -14,8 +14,11 @@ config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
     select LV_USE_ANIMIMG 
     select LV_USE_ANIMATION
     select LV_USE_LINE 
-    select LV_FONT_UNSCII_8
-    select LV_FONT_UNSCII_16
+    select LV_FONT_MONTSERRAT_12
+    select LV_FONT_MONTSERRAT_14
+    select LV_FONT_MONTSERRAT_16
+    select LV_FONT_MONTSERRAT_20
+    select LV_FONT_MONTSERRAT_24
     select ZMK_WPM
     imply ZMK_HID_INDICATORS
 
@@ -63,20 +66,28 @@ choice ZMK_DISPLAY_WORK_QUEUE
     default ZMK_DISPLAY_WORK_QUEUE_DEDICATED
 endchoice
 
+# ST7789V 240x240 RGB565: LVGL must run at 16bpp instead of the 1bpp used
+# for the old 128x64 SSD1306. VDB is kept at 64% (~73 KB of a 115 KB full
+# frame) as a compromise between RAM usage and refresh throughput.
 config LV_Z_MEM_POOL_SIZE
     default 16384
 
 config LV_Z_VDB_SIZE
-    default 100
+    default 64
 
 config LV_DPI_DEF
     default 148
 
 config LV_Z_BITS_PER_PIXEL
-    default 1
+    default 16
 
 choice LV_COLOR_DEPTH
-    default LV_COLOR_DEPTH_1
+    default LV_COLOR_DEPTH_16
 endchoice
+
+# RGB565 字节序跟随屏幕模组。用户屏与 Sofle Monitor 同款（DZT970525 配置为 n）。
+# 若实测红蓝对调，把此值改为 y 即可。
+config LV_COLOR_16_SWAP
+    default n
 
 endif

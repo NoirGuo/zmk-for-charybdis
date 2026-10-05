@@ -8,6 +8,13 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM AND ((NOT CONF
     zephyr_library_include_directories(${CMAKE_CURRENT_LIST_DIR}/../../../include)
     if (CONFIG_ZMK_DONGLE_MONITOR)
         zephyr_library_sources(monitor_status_screen.c)
+        # Mac-style modifier icon bitmaps (control/shift/alt/cmd).
+        zephyr_library_sources(widgets/modifiers_sym.c)
+        # Direct-SPI GC9A01 driver (carrefinho/prospector-zmk-module style).
+        # It registers the "noirix,gc9a01" device; the in-tree Zephyr driver
+        # (galaxycore,gc9x01x, MIPI-DBI) is not used because our node layout
+        # is direct-SPI without mipi-mode.
+        zephyr_library_sources(display_driver/display_gc9a01.c)
     else()
         zephyr_library_sources(custom_status_screen.c)
         zephyr_library_sources(widgets/typed_keys_status.c)

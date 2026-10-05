@@ -30,9 +30,9 @@ struct zmk_status_adv_data {
     uint8_t status_flags;          // Status flags (bit field)
     uint8_t device_role;           // Device role (CENTRAL/PERIPHERAL/STANDALONE)
     uint8_t device_index;          // Device index for split keyboards
-    uint8_t peripheral_battery[3]; // Battery levels: [0]=Left keyboard, [1]=Right/Aux, [2]=Third device (0=N/A)
+    uint8_t peripheral_battery[2]; // Battery levels: [0]=Left keyboard, [1]=Right/Aux (0=N/A)
     char layer_name[4];            // Layer name (null-terminated, reduced from 6 to 4)
-    uint8_t keyboard_id[4];        // Keyboard identifier
+    char typed_keys[5];            // Recently typed letters A-Z (ASCII, 0-terminated, max 4+NUL or 5 raw)
     uint8_t modifier_flags;        // Active modifier keys (Ctrl/Shift/Alt/GUI)
     uint8_t wpm_value;             // Words per minute (0-255, 0 = inactive/unknown)
     uint8_t channel;               // Channel number 0-255 (0 = accept all/broadcast to all)

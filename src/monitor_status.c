@@ -7,6 +7,7 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/display.h>
+#include <zephyr/drivers/led.h>
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -30,6 +31,17 @@ static struct k_work notify_work;
 #define MONITOR_BLANK_AFTER_MS 30000
 
 static const struct device *display_dev;
+
+/* PWM backlight of the ST7789V panel, wired through the pwm-leds node
+ * selected by the "zmk,display-led" chosen node (same mechanism ZMK's own
+ * display main.c uses). We control it directly here because this monitor
+ * blanks the panel through the raw Zephyr display API, not through ZMK's
+ * blanking events. */
+#if DT_HAS_CHOSEN(zmk_display_led)
+static const struct device *display_led =
+    DEVICE_DT_GET(DT_PARENT(DT_CHOSEN(zmk_display_led)));
+static const uint8_t display_led_idx = DT_NODE_CHILD_IDX(DT_CHOSEN(zmk_display_led));
+#endif
 
 __attribute__((weak)) void zmk_monitor_status_changed(void) {}
 
@@ -55,6 +67,11 @@ static void blank_work_cb(struct k_work *work) {
 
     if (display_dev != NULL && device_is_ready(display_dev)) {
         display_blanking_on(display_dev);
+#if DT_HAS_CHOSEN(zmk_display_led)
+        if (device_is_ready(display_led)) {
+            led_off(display_led, display_led_idx);
+        }
+#endif
         LOG_INF("Display blanked (no status change for %d ms)", MONITOR_BLANK_AFTER_MS);
     }
 }
@@ -63,6 +80,11 @@ static void blank_work_cb(struct k_work *work) {
 static void wake_display(void) {
     if (display_dev != NULL && device_is_ready(display_dev)) {
         display_blanking_off(display_dev);
+#if DT_HAS_CHOSEN(zmk_display_led)
+        if (device_is_ready(display_led)) {
+            led_on(display_led, display_led_idx);
+        }
+#endif
     }
 }
 
@@ -116,6 +138,11 @@ static void scan_recv(const struct bt_le_scan_recv_info *info, struct net_buf_si
     /* Copy layer name (4 bytes in the broadcast, not NUL-terminated). */
     memcpy(next.layer_name, data->layer_name, sizeof(data->layer_name));
     next.layer_name[sizeof(next.layer_name) - 1] = '\0';
+
+    /* Copy typed keys (5 bytes raw in the broadcast; may or may not be
+     * NUL-terminated. Always terminate locally. */
+    memcpy(next.typed_keys, data->typed_keys, sizeof(data->typed_keys));
+    next.typed_keys[sizeof(next.typed_keys) - 1] = '\0';
 
     k_spinlock_key_t key = k_spin_lock(&current_lock);
     struct zmk_monitor_status previous = current;

@@ -1,0 +1,116 @@
+# Copyright (c) 2019, Marc Reilly <marc@cpdesign.com.au>
+# Copyright (c) 2019, PHYTEC Messtechnik GmbH
+# Copyright (c) 2026 NoirGuo
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  GC9A01 240x240 circular display controller driven over a raw SPI bus with a
+  separate command/data (D/C) GPIO line.
+
+  This is the direct-SPI binding used by the Noirix44 monitor port, modeled on
+  the custom "noirix,st7789v" binding (carrefinho/prospector-zmk-module style).
+  The Zephyr 4.1 in-tree "galaxycore,gc9x01x" binding uses the MIPI-DBI wrapper
+  and requires a mipi-mode property, which is incompatible with the direct-SPI
+  node layout used here; hence the custom compatible.
+
+  Panel wiring (8 pins): VCC GND SCL SDA DC CS RST BL. BL is the backlight
+  (PWM, wired like the ST7789V monitor: P0.11 / PWM1 OUT0 via "zmk,display-led").
+
+compatible: "noirix,gc9a01"
+
+include: [spi-device.yaml]
+
+properties:
+  cmd-data-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      Command/Data (D/C) GPIO. High = command, low = data (the driver toggles
+      it around each SPI write).
+
+  reset-gpios:
+    type: phandle-array
+    description: |
+      Optional reset GPIO. When present, the driver pulses it at init;
+      otherwise it falls back to the GC9A01 software reset command.
+
+  width:
+    type: int
+    required: true
+    description: Display width in pixels (240 for the 1.28" round panel)
+
+  height:
+    type: int
+    required: true
+    description: Display height in pixels (240 for the 1.28" round panel)
+
+  x-offset:
+    type: int
+    default: 0
+    description: Column offset of the visible panel in the controller RAM
+
+  y-offset:
+    type: int
+    default: 0
+    description: Row offset of the visible panel in the controller RAM
+
+  mdac:
+    type: int
+    required: true
+    description: Memory Data Access Control (MADCTL) value. Base value for
+      rotation, e.g. 0x08 (BGR) for normal orientation.
+
+  colmod:
+    type: int
+    required: true
+    description: Interface Pixel Format (PIXFMT/COLMOD) value, e.g. 0x55 for
+      RGB565 (16-bit MCU + 16-bit RGB).
+
+  display-inversion:
+    type: boolean
+    description: Send INVON after init (every bit inverted in frame memory).
+
+  pwrctrl1:
+    type: uint8-array
+    default: [0x00]
+    description: Power Control 1 register value
+
+  pwrctrl2:
+    type: uint8-array
+    default: [0x13]
+    description: Power Control 2 register value
+
+  pwrctrl3:
+    type: uint8-array
+    default: [0x13]
+    description: Power Control 3 register value
+
+  pwrctrl4:
+    type: uint8-array
+    default: [0x22]
+    description: Power Control 4 register value
+
+  gamma1:
+    type: uint8-array
+    default: [0x45, 0x09, 0x08, 0x08, 0x26, 0x2A]
+    description: Gamma correction 1 register values (negative polarity)
+
+  gamma2:
+    type: uint8-array
+    default: [0x43, 0x70, 0x72, 0x36, 0x37, 0x6F]
+    description: Gamma correction 2 register values
+
+  gamma3:
+    type: uint8-array
+    default: [0x45, 0x09, 0x08, 0x08, 0x26, 0x2A]
+    description: Gamma correction 3 register values (positive polarity)
+
+  gamma4:
+    type: uint8-array
+    default: [0x43, 0x70, 0x72, 0x36, 0x37, 0x6F]
+    description: Gamma correction 4 register values
+
+  framerate:
+    type: uint8-array
+    default: [0x34]
+    description: Frame rate register value

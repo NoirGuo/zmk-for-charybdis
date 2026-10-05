@@ -81,7 +81,7 @@ manifest:
       revision: main
     - name: prospector-zmk-module
       remote: prospector
-      revision: OLED
+      revision: main
       path: modules/prospector-zmk-module
     # 注：Charybdis 轨迹球 PMW3610 不再使用 DoctorWangWang/zmk-pmw3610-driver
     # （该驱动基于 Zephyr 3.5、2024 年停更，且其 devicetree binding 与
