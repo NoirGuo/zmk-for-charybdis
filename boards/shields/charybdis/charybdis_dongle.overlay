@@ -1,0 +1,146 @@
+/* SPDX-License-Identifier: MIT */
+
+#include "charybdis.dtsi"
+
+/ {
+    chosen {
+        zmk,kscan = &dongle_kscan;
+        zephyr,display = &monitor_lcd;
+        zmk,display-led = &pwm_led_0;
+    };
+
+    dongle_kscan: kscan {
+        compatible = "zmk,kscan-mock";
+        columns = <0>;
+        rows = <0>;
+        events = <0>;
+    };
+
+    disp_bl: disp_bl {
+        compatible = "pwm-leds";
+        pwm_led_0: pwm_led_0 {
+            pwms = <&pwm1 0 PWM_USEC(20) PWM_POLARITY_NORMAL>;
+        };
+    };
+
+    /* 接收右半（peripheral reg 0）经 split 转发的轨迹球 input 事件。
+     * zip_* 标签由 config/charybdis.keymap 顶部的
+     * #include <input/processors.dtsi> 提供。 */
+    input_split_0: input_split_0 {
+        compatible = "zmk,input-split";
+        reg = <0>;
+    };
+
+    /* 与 charybdis_right 原 input-listener 相同的处理链（方向交换 + 层1滚动） */
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&input_split_0>;
+        input-processors = <&zip_xy_swap_mapper>;
+        child-binding {
+            layers = <1>;
+            input-processors = <&zip_xy_swap_mapper &zip_xy_to_scroll_mapper &zip_scroll_scaler 2 1>;
+        };
+    };
+};
+
+/* dongle 无实体键盘矩阵：禁用 kscan0（row/col-gpios 不完整），
+ * chosen 已切换为 kscan-mock。 */
+&kscan0 {
+    status = "disabled";
+};
+
+/* charybdis.dtsi 的 chosen 引用 &led_strip：补一个禁用节点（dongle 无 RGB）。 */
+&spi3 {
+    status = "disabled";
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+        reg = <0>;
+        status = "disabled";
+        spi-max-frequency = <4000000>;
+        chain-length = <1>;
+        color-mapping = <LED_COLOR_ID_GREEN
+                         LED_COLOR_ID_RED
+                         LED_COLOR_ID_BLUE>;
+    };
+};
+
+/*
+ * GC9A01 240x240 SPI 圆形屏（1.28 英寸，8 针 VCC GND SCL SDA DC CS RST BL）：
+ *   SCK  = P0.17  (SPIM_SCK)
+ *   MOSI = P0.20  (SPIM_MOSI)
+ *   CS   = P1.00  (cs-gpios)
+ *   DC   = P0.24  (cmd-data-gpios)
+ *   RST  = P0.22  (reset-gpios)
+ *   BL   = P0.11  (pwm1 OUT0，背光)
+ *
+ * 与 noirix44 gc9a01 monitor 同一接线/驱动（自定义 binding "noirix,gc9a01"）。
+ */
+&pinctrl {
+    monitor_spi0_default: monitor_spi0_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 20)>;
+        };
+    };
+
+    monitor_spi0_sleep: monitor_spi0_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 20)>;
+            low-power-enable;
+        };
+    };
+
+    monitor_pwm1_default: monitor_pwm1_default {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 11)>;
+        };
+    };
+
+    monitor_pwm1_sleep: monitor_pwm1_sleep {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 11)>;
+            low-power-enable;
+        };
+    };
+};
+
+&spi0 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&monitor_spi0_default>;
+    pinctrl-1 = <&monitor_spi0_sleep>;
+    pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio1 0 GPIO_ACTIVE_LOW>;
+
+    monitor_lcd: gc9a01@0 {
+        compatible = "noirix,gc9a01";
+        spi-max-frequency = <20000000>;
+        reg = <0>;
+        cmd-data-gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+        reset-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+        width = <240>;
+        height = <240>;
+        x-offset = <0>;
+        y-offset = <0>;
+        mdac = <0x08>;
+        colmod = <0x55>;
+        display-inversion;
+        pwrctrl1 = [00];
+        pwrctrl2 = [13];
+        pwrctrl3 = [13];
+        pwrctrl4 = [22];
+        gamma1 = [45 09 08 08 26 2A];
+        gamma2 = [43 70 72 36 37 6F];
+        gamma3 = [45 09 08 08 26 2A];
+        gamma4 = [43 70 72 36 37 6F];
+        framerate = [34];
+    };
+};
+
+&pwm1 {
+    status = "okay";
+    pinctrl-0 = <&monitor_pwm1_default>;
+    pinctrl-1 = <&monitor_pwm1_sleep>;
+    pinctrl-names = "default", "sleep";
+};

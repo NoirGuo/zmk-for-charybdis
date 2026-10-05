@@ -14,8 +14,6 @@ manifest:
       url-base: https://github.com/tokyo2006
     - name: englmaxi
       url-base: https://github.com/englmaxi
-    - name: prospector
-      url-base: https://github.com/NoirGuo
   projects:
     - name: mario-peripheral-animation
       remote: gpeye
@@ -79,10 +77,6 @@ manifest:
     - name: zmk-module-runtime-input-processor
       remote: cormoran
       revision: main
-    - name: prospector-zmk-module
-      remote: prospector
-      revision: main
-      path: modules/prospector-zmk-module
     # 注：Charybdis 轨迹球 PMW3610 不再使用 DoctorWangWang/zmk-pmw3610-driver
     # （该驱动基于 Zephyr 3.5、2024 年停更，且其 devicetree binding 与
     # Zephyr 4.1 主线自带 pixart,pmw3610 binding 冲突）。
