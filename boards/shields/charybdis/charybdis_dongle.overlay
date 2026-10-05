@@ -149,3 +149,7 @@
     pinctrl-1 = <&monitor_pwm1_sleep>;
     pinctrl-names = "default", "sleep";
 };
+
+&physical_layout_0 {
+    kscan = <&dongle_kscan>;
+};
