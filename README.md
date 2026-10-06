@@ -142,3 +142,10 @@ GitHub Actions 构建完成后，在运行记录的 Artifacts 中下载固件压
 
 - Dongle 模式下轨迹球事件经 split 转发，链路依赖左右手与 Dongle 的 BLE 连接；
   断开连接时轨迹球与键盘同时不可用（与有线 central 模式不同）；
+
+## 键位图
+
+由 keymap drawer 在 Actions 中自动生成（`keymap-drawer/charybdis.svg`），
+包含全部层（含各层的 RGB/宏/旋钮绑定）：
+
+![Charybdis 键位图](keymap-drawer/charybdis.svg)
