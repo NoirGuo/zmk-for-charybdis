@@ -11,13 +11,22 @@
 #   - board: nice_nano_v2
 #     shield: reviung41
 #
+# 新版 ZMK 的 board 标识符为 nice_nano//zmk（带 //zmk variant 后缀），
+# 通过 artifact-name 显式指定输出文件名，保留熟悉的 nice_nano_v2 命名。
 ---
 include:
-  - board: nice_nano_v2
+  # peripheral（left）半：BLE 分体外设
+  - board: nice_nano//zmk
     shield: charybdis_left
-  - board: nice_nano_v2
+    artifact-name: charybdis_left-nice_nano_v2-zmk
+  # central（right）半：走 USB Studio，需 studio-rpc-usb-uart snippet
+  # （charybdis 的 right 半才是 central，见 Kconfig.defconfig）
+  - board: nice_nano//zmk
     shield: charybdis_right
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
-  - board: nice_nano_v2
+    artifact-name: charybdis_right-nice_nano_v2-zmk
+  # 设置重置工具
+  - board: nice_nano//zmk
     shield: settings_reset
+    artifact-name: settings_reset-nice_nano_v2-zmk

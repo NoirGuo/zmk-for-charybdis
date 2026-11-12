@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package zmk.auth;
+
+// Device identity reporting for the Noirix keyboard.
+//
+// The host asks the device for its MCU unique ID and checks it against a
+// whitelist of authorized device IDs (stored as SHA-256 hashes on the host).
+// No shared secret or MAC is required.
+
+message AuthenticateRequest {
+    // Intentionally empty: the host simply requests the device id.
+}
+
+message AuthenticateResponse {
+    bytes device_id = 1;  // MCU unique ID (variable length, e.g. 8 bytes on nRF52840)
+}
+
+message ErrorResponse {
+    string message = 1;
+}
+
+message Request {
+    oneof request_type {
+        AuthenticateRequest authenticate = 1;
+    }
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        AuthenticateResponse authenticate = 2;
+    }
+}

@@ -1,0 +1,16 @@
+# Noirix device identity reporting module.
+
+config NOIRIX_AUTH
+    bool "Noirix device identity reporting (device-id whitelist)"
+    default y
+    depends on ZMK_STUDIO_RPC
+    select HWINFO
+    help
+      Registers the "noirix__auth" ZMK Studio RPC subsystem, which reports the
+      MCU unique ID (device_id) so the host (dya-studio) can check it against a
+      whitelist of authorized device IDs. No shared secret or MAC is involved;
+      the host stores whitelisted device IDs as SHA-256 hashes.
+
+      Depends on CONFIG_ZMK_STUDIO_RPC (the custom RPC subsystem is registered
+      via ZMK Studio's custom subsystem API). On a split keyboard only the
+      central half enables ZMK_STUDIO_RPC, so this is only built there.

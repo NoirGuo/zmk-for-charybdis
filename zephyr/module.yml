@@ -1,0 +1,14 @@
+# Charybdis config 仓库的模块声明。
+#
+# 新版结构：boards/shields 提到仓库根，board_root: . 让 west 从仓库根解析 shield。
+#
+# 同时，本仓库还内嵌了 noirix-auth（设备身份上报 / device-id 白名单）本地模块，
+# 通过 cmake/kconfig 字段指向 modules/noirix-auth 目录编译。
+#
+# 若未来要把 noirix-auth 抽成独立 Git 仓库，可删除 cmake/kconfig 两行与 modules/ 目录，
+# 改为在 config/west.yml 的 projects 里以 project 形式引入（见 README）。
+build:
+  cmake: modules/noirix-auth
+  kconfig: modules/noirix-auth/Kconfig
+  settings:
+    board_root: .

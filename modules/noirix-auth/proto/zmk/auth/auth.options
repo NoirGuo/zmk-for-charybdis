@@ -1,0 +1,5 @@
+# nanopb options: fix the maximum size of each bytes/string field so the
+# generated structs use fixed-size arrays (no dynamic allocation).
+
+zmk.auth.AuthenticateResponse.device_id max_size:16
+zmk.auth.ErrorResponse.message       max_size:64
