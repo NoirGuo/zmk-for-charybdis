@@ -2,4 +2,18 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    uses: cormoran/zmk/.github/workflows/build-user-config.yml@main+dya
+  draw:
+    uses: caksoylar/keymap-drawer/.github/workflows/draw-zmk.yml@main
+    permissions:
+      contents: write
+    with:
+      keymap_patterns: "config/*.keymap"
+      config_path: "keymap_drawer.config.yaml"
+      output_folder: "keymap-drawer"
+      parse_args: ""
+      draw_args: ""
+      commit_message: "[Draw] ${{ github.event.head_commit.message }}"
+      amend_commit: false
+      json_path: "config"
+      destination: "both"
