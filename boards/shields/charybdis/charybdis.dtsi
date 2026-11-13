@@ -76,8 +76,8 @@
 / {
     chosen {
         zmk,kscan = &kscan0;
-        zmk,physical-layouts = &physical_layout_0;
-	zmk,underglow = &led_strip;
+        zmk,physical-layout = &physical_layout_0;
+        zmk,underglow = &led_strip;
     };
 
     default_transform: keymap_transform_0 {
@@ -146,12 +146,6 @@
 
 	transform = <&default_transform>;
 	kscan = <&kscan0>;
-
-};
-
-zephyr_udc0: &usbd { 
-    compatible = "nordic,nrf-usbd"; 
-    status = "okay"; 
 
 };
 
