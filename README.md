@@ -58,37 +58,34 @@
 
 在原配置基础上**新增**以下 DYA 开关（保留 RGB / 旋钮 / 鼠标 / BLE 原有配置）。
 
-> ⚠️ **关键分层原则**：`*_STUDIO_RPC` / `*_RPC_STUDIO` / `SPLIT_RPC_RELAY` 这些配置会
-> 依赖或 `select` 出 `proto/zmk/custom.pb.h` 的编译需求，而该 proto 只在
-> `CONFIG_ZMK_STUDIO_RPC=y` 时由 ZMK 核心生成（`ZMK_STUDIO` 通过
-> `select ZMK_STUDIO_RPC if !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL` 仅在 **central 半**开启）。
-> 因此这些配置**只能放在 central 半**（`charybdis_right.conf`），**不能放在两侧通用的
-> `charybdis.conf`**，否则 peripheral（left）半会因 `fatal error: proto/zmk/custom.pb.h:
-> No such file or directory` 而编译失败。
+> ⚠️ **关键分层原则（两条）**：
+>
+> 1. **`*_STUDIO_RPC` / `*_RPC_STUDIO` / `SPLIT_RPC_RELAY` 只能放 central 半**：这些配置
+>    依赖或 `select` 出 `proto/zmk/custom.pb.h` 的编译需求，而该 proto 只在
+>    `CONFIG_ZMK_STUDIO_RPC=y` 时由 ZMK 核心生成（`ZMK_STUDIO` 通过
+>    `select ZMK_STUDIO_RPC if !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL` 仅在 **central 半**开启）。
+>    放在两侧通用会导致 peripheral（left）半 `fatal error: proto/zmk/custom.pb.h:
+>    No such file or directory`。
+>
+> 2. **DYA 功能模块的「底座」也只能放 central 半**：`CUSTOM_SETTINGS` / `DEVICE_INFO` /
+>    `RUNTIME_MACRO` / `RUNTIME_COMBO` / `RUNTIME_SENSOR_ROTATE` 这些底座依赖 ZMK 核心里
+>    central-only 编译的源文件（`behavior_queue.c` / `keymap.c` / `combo.c` /
+>    `keycode_state_changed.c` 等，见核心 `app/CMakeLists.txt` 的
+>    `if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)` 块）。
+>    放在两侧通用会导致 peripheral 半链接失败（`undefined reference to
+>    zmk_behavior_queue_add` / `zmk_keymap_highest_layer_active` 等）。
+>
+> 因此，**两侧通用的 `charybdis.conf` 只保留**基础配置 + `ZMK_STUDIO` 基础 +
+> `BEHAVIOR_LOCAL_IDS_IN_BINDINGS` + 分体事件中继 + 栈参数；**所有 DYA 功能底座与
+> RPC 变体统一放在 central 半的 `charybdis_right.conf`**（见 2.3 节）。
 
 ```ini
-# 内核升级后运行时绑定必需
+# 内核升级后运行时绑定必需（Zephyr 4.1 + Custom Protocol，两侧通用）
 CONFIG_ZMK_BEHAVIOR_LOCAL_IDS_IN_BINDINGS=y
 
-# 自定义设置（底座）
-CONFIG_ZMK_CUSTOM_SETTINGS=y
-
-# 设备信息（底座）
-CONFIG_ZMK_DEVICE_INFO=y
-
-# 运行时宏（底座）
-CONFIG_ZMK_RUNTIME_MACRO=y
-CONFIG_ZMK_BEHAVIOR_LOCAL_ID_TYPE_CRC16=y
-
-# 运行时组合键（底座）
-CONFIG_ZMK_RUNTIME_COMBO=y
-
-# 运行时旋钮（底座）
-CONFIG_ZMK_RUNTIME_SENSOR_ROTATE=y
-
-# 设置 RPC（底座）
-CONFIG_SETTINGS=y
-CONFIG_ZMK_SETTINGS_RPC=y
+# 分体事件中继 + 设置防抖（两侧通用）
+CONFIG_ZMK_SPLIT_RELAY_EVENT=y
+CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE=10000
 
 # 栈/缓冲区（两侧通用部分）
 CONFIG_ZMK_LOW_PRIORITY_THREAD_STACK_SIZE=4096
@@ -96,8 +93,10 @@ CONFIG_ZMK_SPLIT_RELAY_EVENT_DATA_LEN=240
 CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=4096
 ```
 
-> 各模块的 `*_STUDIO_RPC` 变体及 `CUSTOM_SETTINGS_SPLIT_RPC_RELAY`、RPC 专属栈参数
-> （`ZMK_STUDIO_RPC_*`）统一放在 central 半的 `charybdis_right.conf`（见 2.3 节）。
+> 所有 DYA 功能底座（`CUSTOM_SETTINGS` / `DEVICE_INFO` / `RUNTIME_MACRO` /
+> `RUNTIME_COMBO` / `RUNTIME_SENSOR_ROTATE` / `SETTINGS_RPC`）及 `*_STUDIO_RPC` 变体、
+> `CUSTOM_SETTINGS_SPLIT_RPC_RELAY`、RPC 专属栈参数（`ZMK_STUDIO_RPC_*`）、
+> `CUSTOM_SETTINGS_LARGE_VALUE_MAX_SIZE` 统一放在 central 半的 `charybdis_right.conf`（见 2.3 节）。
 
 ---
 
@@ -146,7 +145,16 @@ CONFIG_ZMK_SPLIT_BLE_CENTRAL_SPLIT_RUN_STACK_SIZE=768
 CONFIG_ZMK_RUNTIME_INPUT_PROCESSOR=y
 CONFIG_ZMK_RUNTIME_INPUT_PROCESSOR_STUDIO_RPC=y
 
-# DYA 功能模块的 Studio RPC 变体（仅 central 半，见 2.2 节分层原则）
+# DYA 功能模块的「底座」（依赖 central-only 符号，见 2.2 节分层原则）
+CONFIG_ZMK_CUSTOM_SETTINGS=y
+CONFIG_ZMK_DEVICE_INFO=y
+CONFIG_ZMK_RUNTIME_MACRO=y
+CONFIG_ZMK_BEHAVIOR_LOCAL_ID_TYPE_CRC16=y
+CONFIG_ZMK_RUNTIME_COMBO=y
+CONFIG_ZMK_RUNTIME_SENSOR_ROTATE=y
+CONFIG_SETTINGS=y
+
+# DYA 功能模块的 Studio RPC 变体（仅 central 半）
 CONFIG_ZMK_CUSTOM_SETTINGS_STUDIO_RPC=y
 CONFIG_ZMK_CUSTOM_SETTINGS_SPLIT_RPC_RELAY=y
 CONFIG_ZMK_DEVICE_INFO_STUDIO_RPC=y
@@ -168,16 +176,32 @@ CONFIG_ZMK_CUSTOM_SETTINGS_LARGE_VALUE_MAX_SIZE=256
 
 ### 2.4 `boards/shields/charybdis/charybdis_left.conf`（peripheral 半）
 
-只承载 peripheral 侧最小 DYA 功能：
+只承载 peripheral 侧最小 DYA 功能（不依赖 central-only 符号）：
 
 ```ini
+# 旋钮 EC11（原有，保留）
+CONFIG_EC11=y
+CONFIG_EC11_TRIGGER_GLOBAL_THREAD=y
+
+# 鼠标 pointing（原有，保留）
+CONFIG_ZMK_POINTING=y
+
+# 电池历史（peripheral 侧也记录，经 central 上报）
 CONFIG_ZMK_BATTERY_HISTORY=y
+
+# 设置 RPC（peripheral 侧最小依赖）
 CONFIG_ZMK_SETTINGS_RPC=y
+
+# 分体事件中继 + 设置防抖
 CONFIG_ZMK_SPLIT_RELAY_EVENT=y
 CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE=10000
 ```
 
-（保留原有 EC11 + pointing 配置）
+> 💡 **left 半的旋钮为何不需要 runtime-sensor-rotate 底座**：ZMK 分体架构里，peripheral
+> 半的 sensor 事件（encoder 旋转）会自动 relay 给 central（`split/peripheral.c` 订阅
+> `zmk_sensor_event` → central 的 `keymap.c` 执行 `sensor_binding_process`）。因此
+> runtime-sensor-rotate 的 behavior 实现（依赖 central-only 的 `behavior_queue.c`）只在
+> central 半编译，left 半只负责采集 + relay。
 
 ---
 
